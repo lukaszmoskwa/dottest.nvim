@@ -49,9 +49,20 @@ local function create_user_commands()
   end, { desc = "Rerun the last .NET test target" })
 end
 
+local function create_keymap()
+  if not state.config.keymap then
+    return
+  end
+
+  vim.keymap.set(state.config.keymap_mode, state.config.keymap, function()
+    ui.toggle_panel()
+  end, { desc = "Toggle dottest panel" })
+end
+
 function M.setup(opts)
   state.config = config.merge(opts)
   create_user_commands()
+  create_keymap()
 end
 
 return M

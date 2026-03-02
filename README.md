@@ -84,6 +84,8 @@ Default configuration:
 require("dottest").setup({
   suite_dirname = ".dottest",
   suite_filename = "suites.json",
+  keymap = false,
+  keymap_mode = "n",
   panel = {
     open_mode = "current_buffer",
     split = {
@@ -100,6 +102,16 @@ require("dottest").setup({
 - `"current_buffer"` replace the current buffer with the panel
 - `"split"` open the panel in a configured split
 - `"tab"` open the panel in its own tab
+
+Set `keymap = false` to disable the built-in mapping, or assign your own shortcut such as `<leader>dt`.
+
+Example:
+
+```lua
+require("dottest").setup({
+  keymap = "<leader>dt",
+})
+```
 
 ## Commands
 
