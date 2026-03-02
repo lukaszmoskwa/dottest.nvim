@@ -1,0 +1,22 @@
+{
+  "name": "dottest.nvim",
+  "description": "Neovim plugin for running and managing .NET tests with a Rider-like workflow",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukaszmoskwa/dottest.nvim.git"
+  },
+  "homepage": "https://github.com/lukaszmoskwa/dottest.nvim#readme",
+  "bugs": {
+    "url": "https://github.com/lukaszmoskwa/dottest.nvim/issues"
+  },
+  "type": "module",
+  "scripts": {
+    "panel": "node ./ink/cli.mjs"
+  },
+  "dependencies": {
+    "ink": "^5.2.1",
+    "react": "^18.3.1"
+  }
+}

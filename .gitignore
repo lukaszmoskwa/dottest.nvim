@@ -1,0 +1,4 @@
+node_modules/
+.dottest/
+.DS_Store
+.nvimlog
