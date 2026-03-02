@@ -43,6 +43,14 @@ local function restore_window(winid, term_bufnr, previous_bufnr)
   end)
 end
 
+local function is_valid_buf(bufnr)
+  return bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
+end
+
+local function is_valid_win(winid)
+  return winid and winid > 0 and vim.api.nvim_win_is_valid(winid)
+end
+
 local function open_target_window()
   local panel_config = state.config.panel or {}
   local open_mode = panel_config.open_mode or "current_buffer"
@@ -79,6 +87,8 @@ local function open_terminal(cmd, cwd)
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].buflisted = false
+  vim.bo[bufnr].bufhidden = "hide"
+  vim.bo[bufnr].swapfile = false
   state.panel.panel_buf = bufnr
 
   local winid = open_target_window()
@@ -120,6 +130,42 @@ local function open_terminal(cmd, cwd)
   end)
 end
 
+local function show_source()
+  local source_buf = state.panel.last_source_buf
+  if not is_valid_buf(source_buf) then
+    return false
+  end
+
+  local source_win = state.panel.last_source_win
+  if is_valid_win(source_win) then
+    vim.api.nvim_set_current_win(source_win)
+    vim.api.nvim_win_set_buf(source_win, source_buf)
+    return true
+  end
+
+  vim.api.nvim_win_set_buf(vim.api.nvim_get_current_win(), source_buf)
+  return true
+end
+
+local function show_panel_buffer()
+  local panel_buf = state.panel.panel_buf
+  if not is_valid_buf(panel_buf) then
+    return false
+  end
+
+  local panel_win = state.panel.panel_win
+  if is_valid_win(panel_win) then
+    vim.api.nvim_set_current_win(panel_win)
+    return true
+  end
+
+  local winid = open_target_window()
+  state.panel.panel_win = winid
+  vim.api.nvim_win_set_buf(winid, panel_buf)
+  vim.cmd.startinsert()
+  return true
+end
+
 function M.open()
   local workspace_root = root.from_path()
   local repo_root = plugin_root()
@@ -139,6 +185,21 @@ function M.open()
     "--nvim-server",
     server,
   }, workspace_root)
+end
+
+function M.toggle()
+  local current_buf = vim.api.nvim_get_current_buf()
+  if is_valid_buf(state.panel.panel_buf) and current_buf == state.panel.panel_buf then
+    if show_source() then
+      return
+    end
+  end
+
+  if show_panel_buffer() then
+    return
+  end
+
+  M.open()
 end
 
 return M

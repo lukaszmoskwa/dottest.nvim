@@ -105,6 +105,7 @@ require("dottest").setup({
 
 - `:DottestDiscover` open the test panel
 - `:DottestPanel` open the test panel
+- `:DottestPanelToggle` toggle between the test panel and the last source buffer
 - `:DottestSuites` manage saved suites
 - `:DottestRunAll` run all tests in the current workspace
 - `:DottestRunNearest` run the nearest test under the cursor

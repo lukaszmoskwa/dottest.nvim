@@ -9,6 +9,7 @@ local M = {}
 local function create_user_commands()
   pcall(vim.api.nvim_del_user_command, "DottestDiscover")
   pcall(vim.api.nvim_del_user_command, "DottestPanel")
+  pcall(vim.api.nvim_del_user_command, "DottestPanelToggle")
   pcall(vim.api.nvim_del_user_command, "DottestSuites")
   pcall(vim.api.nvim_del_user_command, "DottestRunAll")
   pcall(vim.api.nvim_del_user_command, "DottestRunNearest")
@@ -21,6 +22,10 @@ local function create_user_commands()
   vim.api.nvim_create_user_command("DottestPanel", function()
     ui.open_discovery()
   end, { desc = "Open the .NET test panel" })
+
+  vim.api.nvim_create_user_command("DottestPanelToggle", function()
+    ui.toggle_panel()
+  end, { desc = "Toggle the .NET test panel" })
 
   vim.api.nvim_create_user_command("DottestSuites", function()
     ui.manage_suites()

@@ -9,6 +9,10 @@ function M.open_discovery()
   panel.open()
 end
 
+function M.toggle_panel()
+  panel.toggle()
+end
+
 function M.run_all()
   runner.run_workspace(discovery.find_test_projects())
 end
