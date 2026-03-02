@@ -133,7 +133,7 @@ Inside the panel:
 - `h` collapses a node
 - `<Space>` toggles the checkbox on the current node
 - `r` runs the current node
-- `R` expands the tree and runs all discovered tests
+- `R` expands the tree and runs checked nodes, or all discovered tests if nothing is checked
 - `Tab` switches between the main tree and the failed-tests pane
 - `Esc` cancels the active test run
 - `a` toggles all visible nodes
