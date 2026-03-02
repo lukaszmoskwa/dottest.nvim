@@ -1272,11 +1272,21 @@ function App({ initialCwd, nvimServer }) {
     }
 
     if (input === "R") {
-      const expandedTree = structuredClone(tree);
-      expandAllNodes(expandedTree);
-      setTree(expandedTree);
+      const checkedTargets = collectChecked();
+      let items;
 
-      const items = collectAllTests(expandedTree);
+      if (checkedTargets.length > 0) {
+        items = checkedTargets;
+        const expandedTree = structuredClone(tree);
+        expandAllNodes(expandedTree);
+        setTree(expandedTree);
+      } else {
+        const expandedTree = structuredClone(tree);
+        expandAllNodes(expandedTree);
+        setTree(expandedTree);
+        items = collectAllTests(expandedTree);
+      }
+
       if (items.length === 0) {
         setStatus("No tests found to run");
         return;
@@ -1321,7 +1331,7 @@ function App({ initialCwd, nvimServer }) {
       h(KeyHint, { label: "r" }),
       h(Text, { color: COLORS.muted }, " run  "),
       h(KeyHint, { label: "R" }),
-      h(Text, { color: COLORS.muted }, " expand + run all  "),
+      h(Text, { color: COLORS.muted }, " run checked (or all)  "),
       h(KeyHint, { label: "Tab" }),
       h(Text, { color: COLORS.muted }, " switch  "),
       h(KeyHint, { label: "Esc" }),

@@ -2,7 +2,7 @@
 
 ## Phase 1
 
-- [ ] Checked runs in the panel
+- [x] Checked runs in the panel
   Make `R` run selected nodes instead of all discovered tests, with clear precedence for project, scope, and test selections.
 - [ ] Suite creation and editing
   Add "save selection as suite", "append to suite", and "rename suite" flows from the panel or Neovim commands.
@@ -46,7 +46,7 @@
 
 ## Recommended Order
 
-- [ ] Checked runs in the panel
+- [x] Checked runs in the panel
 - [ ] Suite creation and editing
 - [ ] Failure integration with quickfix
 - [ ] Configurable runner options
