@@ -137,6 +137,7 @@ Inside the panel:
 - `Tab` switches between the main tree and the failed-tests pane
 - `Esc` cancels the active test run
 - `a` toggles all visible nodes
+- `s` saves checked nodes as a named suite (prompts for name; appends if the suite already exists)
 - `o` toggles the output panel
 - `g` refreshes the workspace tree
 - `q` closes the panel
@@ -151,7 +152,9 @@ Suites are stored in a project-local file:
 
 This keeps named suites close to the repository, so they can be shared if you want to commit them.
 
-Saving a target into an existing suite appends it instead of replacing the suite.
+Saving to an existing suite name appends the new items instead of replacing the suite.
+
+Use `:DottestSuites` to run, rename, or delete saved suites from Neovim.
 
 ## Contributing
 

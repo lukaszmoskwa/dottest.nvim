@@ -98,6 +98,26 @@ function M.save(name, items, path)
   write_json(file, { suites = next_suites })
 end
 
+function M.rename(old_name, new_name, path)
+  local file = suite_path(path)
+  local data = load_json(file)
+  local next_suites = {}
+
+  for _, suite in ipairs(data.suites) do
+    if suite.name == old_name then
+      table.insert(next_suites, { name = new_name, items = suite.items or {} })
+    else
+      table.insert(next_suites, suite)
+    end
+  end
+
+  table.sort(next_suites, function(a, b)
+    return a.name < b.name
+  end)
+
+  write_json(file, { suites = next_suites })
+end
+
 function M.delete(name, path)
   local file = suite_path(path)
   local data = load_json(file)

@@ -18,6 +18,7 @@ const TEST_PATTERNS = [
 ];
 const CACHE_DIRNAME = ".dottest";
 const CACHE_FILENAME = "test-cache.json";
+const SUITES_FILENAME = "suites.json";
 const COLORS = {
   panelBg: "#1d1d1d",
   scrollBg: "#2f2f2f",
@@ -146,6 +147,50 @@ async function loadCache(workspaceRoot) {
 async function saveCache(workspaceRoot, cache) {
   await fs.mkdir(path.join(workspaceRoot, CACHE_DIRNAME), { recursive: true });
   await fs.writeFile(cacheFilePath(workspaceRoot), JSON.stringify(cache), "utf8");
+}
+
+function suitesFilePath(workspaceRoot) {
+  return path.join(workspaceRoot, CACHE_DIRNAME, SUITES_FILENAME);
+}
+
+async function loadSuites(workspaceRoot) {
+  try {
+    const raw = await fs.readFile(suitesFilePath(workspaceRoot), "utf8");
+    const decoded = JSON.parse(raw);
+    return decoded && Array.isArray(decoded.suites) ? decoded.suites : [];
+  } catch {
+    return [];
+  }
+}
+
+function itemKey(item) {
+  return [item.kind ?? "", item.name ?? "", item.filter ?? "", item.project?.path ?? ""].join("::");
+}
+
+async function saveSuite(workspaceRoot, name, items) {
+  await fs.mkdir(path.join(workspaceRoot, CACHE_DIRNAME), { recursive: true });
+  const existing = await loadSuites(workspaceRoot);
+  let inserted = false;
+  const next = existing.map(suite => {
+    if (suite.name !== name) {
+      return suite;
+    }
+    const seen = new Set((suite.items ?? []).map(itemKey));
+    const merged = [...(suite.items ?? [])];
+    for (const item of items) {
+      if (!seen.has(itemKey(item))) {
+        merged.push(item);
+      }
+    }
+    inserted = true;
+    return { name, items: merged };
+  });
+  if (!inserted) {
+    next.push({ name, items });
+  }
+  next.sort((a, b) => a.name.localeCompare(b.name));
+  await fs.writeFile(suitesFilePath(workspaceRoot), JSON.stringify({ suites: next }), "utf8");
+  return next;
 }
 
 function runCommand(command, args, cwd, onLine, options = {}) {
@@ -652,6 +697,18 @@ function SearchPrompt({ active, value }) {
   );
 }
 
+function SuitePrompt({ active, value }) {
+  if (!active) {
+    return null;
+  }
+
+  return h(
+    Text,
+    { color: COLORS.success },
+    `Save suite as: ${value}_`
+  );
+}
+
 function getScrollWindow(items, cursor, height) {
   if (height <= 0) {
     return [];
@@ -727,6 +784,9 @@ function App({ initialCwd, nvimServer }) {
   const [focus, setFocus] = useState("tree");
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [suitePromptActive, setSuitePromptActive] = useState(false);
+  const [suitePromptValue, setSuitePromptValue] = useState("");
+  const suitePromptTargetsRef = useRef([]);
   const testsCacheRef = useRef(new Map());
   const failedItemsRef = useRef([]);
   const activeChildrenRef = useRef(new Set());
@@ -760,6 +820,7 @@ function App({ initialCwd, nvimServer }) {
   const topReservedLines =
     3 +
     (searchActive || searchQuery !== "" ? 1 : 0) +
+    (suitePromptActive ? 1 : 0) +
     (progress.total > 0 ? 2 : 0) +
     1;
   const treeHeight = Math.max(8, terminalHeight - topReservedLines - failedPaneHeight - outputPaneHeight - 4);
@@ -1043,6 +1104,37 @@ function App({ initialCwd, nvimServer }) {
       return;
     }
 
+    if (suitePromptActive) {
+      if (key.escape) {
+        setSuitePromptActive(false);
+        setSuitePromptValue("");
+        suitePromptTargetsRef.current = [];
+        return;
+      }
+
+      if (key.return) {
+        const name = suitePromptValue.trim();
+        setSuitePromptActive(false);
+        setSuitePromptValue("");
+        if (name && workspace) {
+          const targets = suitePromptTargetsRef.current;
+          suitePromptTargetsRef.current = [];
+          try {
+            await saveSuite(workspace.root, name, targets);
+            setStatus(`Saved suite "${name}" (${targets.length} item${targets.length === 1 ? "" : "s"})`);
+          } catch (error) {
+            setStatus(`Failed to save suite: ${error.message}`);
+          }
+        } else {
+          suitePromptTargetsRef.current = [];
+        }
+        return;
+      }
+
+      setSuitePromptValue(value => applyPromptInput(value, input, key));
+      return;
+    }
+
     if (searchActive) {
       if (key.escape) {
         setSearchActive(false);
@@ -1220,6 +1312,18 @@ function App({ initialCwd, nvimServer }) {
       return;
     }
 
+    if (input === "s") {
+      const targets = collectChecked();
+      if (targets.length === 0) {
+        setStatus("Check nodes with <Space> before saving a suite");
+        return;
+      }
+      suitePromptTargetsRef.current = targets;
+      setSuitePromptValue("");
+      setSuitePromptActive(true);
+      return;
+    }
+
     if (input === "r") {
       if (currentNode.kind === "workspace" && workspace) {
         setFailedItems([]);
@@ -1336,10 +1440,13 @@ function App({ initialCwd, nvimServer }) {
       h(Text, { color: COLORS.muted }, " switch  "),
       h(KeyHint, { label: "Esc" }),
       h(Text, { color: COLORS.muted }, " stop  "),
+      h(KeyHint, { label: "s" }),
+      h(Text, { color: COLORS.muted }, " save suite  "),
       h(KeyHint, { label: "o" }),
       h(Text, { color: COLORS.muted }, " output")
     ),
     h(SearchPrompt, { active: searchActive, value: searchQuery }),
+    h(SuitePrompt, { active: suitePromptActive, value: suitePromptValue }),
     progress.total > 0 ? h(Box, { marginTop: 1, flexDirection: "column" },
       h(ProgressBar, { progress }),
       h(Text, { color: progress.failed > 0 ? COLORS.danger : COLORS.muted }, progress.failed > 0 ? `${progress.failed} failed` : "all passing so far")

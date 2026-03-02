@@ -36,6 +36,7 @@ function M.manage_suites()
 
     vim.ui.select({
       { action = "run", label = "Run suite" },
+      { action = "rename", label = "Rename suite" },
       { action = "delete", label = "Delete suite" },
     }, {
       prompt = selected_suite.name,
@@ -50,6 +51,17 @@ function M.manage_suites()
       if action.action == "delete" then
         suite.delete(selected_suite.name)
         vim.notify("[dottest.nvim] Deleted suite " .. selected_suite.name, vim.log.levels.INFO)
+        return
+      end
+
+      if action.action == "rename" then
+        vim.ui.input({ prompt = "New name: ", default = selected_suite.name }, function(new_name)
+          if not new_name or new_name == "" or new_name == selected_suite.name then
+            return
+          end
+          suite.rename(selected_suite.name, new_name)
+          vim.notify("[dottest.nvim] Renamed suite to " .. new_name, vim.log.levels.INFO)
+        end)
         return
       end
 
