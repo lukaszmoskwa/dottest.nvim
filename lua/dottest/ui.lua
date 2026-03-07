@@ -1,16 +1,16 @@
 local discovery = require("dottest.discovery")
-local panel = require("dottest.panel")
+local explorer = require("dottest.explorer")
 local runner = require("dottest.runner")
 local suite = require("dottest.suite")
 
 local M = {}
 
 function M.open_discovery()
-  panel.open()
+  explorer.open()
 end
 
 function M.toggle_panel()
-  panel.toggle()
+  explorer.toggle()
 end
 
 function M.run_all()

@@ -11,12 +11,5 @@
   "bugs": {
     "url": "https://github.com/lukaszmoskwa/dottest.nvim/issues"
   },
-  "type": "module",
-  "scripts": {
-    "panel": "node ./ink/cli.mjs"
-  },
-  "dependencies": {
-    "ink": "^5.2.1",
-    "react": "^18.3.1"
-  }
+  "type": "module"
 }

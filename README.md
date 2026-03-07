@@ -5,14 +5,12 @@ Neovim plugin for running and managing .NET tests with a Rider-like workflow.
 ## Features
 
 - Discover solutions and test projects in the current workspace
-- Open a persistent Ink panel with an expandable test tree and checkboxes
-- Keep the test tree inside a scrollable viewport sized to the terminal
-- Show per-node run state and overall run progress in the panel
-- Show failed tests in a dedicated pane and jump back into Neovim files
-- Populate quickfix with failed test locations
+- Open a persistent native explorer buffer with a project -> namespace/class -> test tree
+- Show per-node run state directly in explorer columns
+- Aggregate pass/fail state from tests up to scopes and projects
+- Populate quickfix with failed test names from the latest run
 - List tests from a selected project using `dotnet test --list-tests`
 - Preload tests for the workspace so filtering can search the whole tree
-- Cache discovered test lists in `.dottest/test-cache.json` until you refresh the workspace
 - Run a whole project, a class/namespace scope, or an individual test
 - Run all tests in the current solution or all discovered test projects
 - Save named test suites per project in `.dottest/suites.json`
@@ -23,7 +21,6 @@ Neovim plugin for running and managing .NET tests with a Rider-like workflow.
 
 - Neovim >= 0.9
 - `.NET SDK` available on `PATH`
-- Node.js >= 20
 
 ## Installation
 
@@ -32,29 +29,19 @@ Neovim plugin for running and managing .NET tests with a Rider-like workflow.
 ```lua
 {
   "lukaszmoskwa/dottest.nvim",
-  build = "npm install",
   config = function()
     require("dottest").setup()
   end,
 }
 ```
 
-`dottest.nvim` embeds an Ink-based panel, so the Node dependencies need to be installed once during setup.
-
 ## Development
-
-Install the Ink runtime first:
-
-```bash
-cd /path/to/dottest.nvim
-npm install
-```
 
 For local plugin development, start Neovim with an isolated app name so it does not pick up your normal config:
 
 ```bash
 NVIM_APPNAME=dottest-dev nvim -u NONE -i NONE \
-  --cmd "set runtimepath^=$(pwd)" \
+  --cmd "set runtimepath^=/path/to/repo/dottest.nvim" \
   --cmd 'lua require("dottest").setup()'
 ```
 
@@ -68,13 +55,6 @@ NVIM_APPNAME=dottest-dev nvim --headless -u NONE -i NONE \
 ```
 
 `NVIM_APPNAME=dottest-dev` tells Neovim to use a separate config/data namespace for this plugin session.
-
-To run the Ink panel directly during development:
-
-```bash
-cd /path/to/dottest.nvim
-npm run panel -- --cwd /path/to/your/dotnet/workspace
-```
 
 ## Configuration
 
@@ -99,9 +79,9 @@ require("dottest").setup({
 
 `panel.open_mode` supports:
 
-- `"current_buffer"` replace the current buffer with the panel
-- `"split"` open the panel in a configured split
-- `"tab"` open the panel in its own tab
+- `"current_buffer"` replace the current buffer with the explorer
+- `"split"` open the explorer in a configured split
+- `"tab"` open the explorer in its own tab
 
 Set `keymap = false` to disable the built-in mapping, or assign your own shortcut such as `<leader>dt`.
 
@@ -115,33 +95,23 @@ require("dottest").setup({
 
 ## Commands
 
-- `:DottestDiscover` open the test panel
-- `:DottestPanel` open the test panel
-- `:DottestPanelToggle` toggle between the test panel and the last source buffer
-- `:DottestSuites` manage saved suites
-- `:DottestRunAll` run all tests in the current workspace
-- `:DottestRunNearest` run the nearest test under the cursor
-- `:DottestRerunLast` rerun the last project, scope, test, or suite
+- `:DottestPanel` open the test explorer
+- `:DottestPanelToggle` toggle between the test explorer and the last source buffer
 
-## Ink Panel
+## Explorer
 
-Inside the panel:
+Inside the explorer:
 
 - `j` / `k` / `PageUp` / `PageDown` moves the cursor
-- `/` starts filtering tests by name
-- `<CR>` or `l` expands a node, or opens a test file in a new Neovim split
+- `/` prompts for a test-name filter
+- `c` clears the active filter
+- `<CR>` or `l` expands a project or scope, or runs the selected test
 - `h` collapses a node
-- `<Space>` toggles the checkbox on the current node
 - `r` runs the current node
-- `R` expands the tree and runs checked nodes, or all discovered tests if nothing is checked
-- `Tab` switches between the main tree and the failed-tests pane
-- `Esc` cancels the active test run
-- `a` toggles all visible nodes
-- `o` toggles the output panel
-- `g` refreshes the workspace tree
-- `q` closes the panel
-
-When the failed-tests pane is focused, press `<CR>` to open the selected failure in a new Neovim split.
+- `R` runs all discovered test projects
+- `o` toggles a split with the latest captured output for the current node
+- `gr` refreshes the workspace tree
+- `q` closes the explorer window
 
 ## Suite storage
 

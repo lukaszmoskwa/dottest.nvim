@@ -3,8 +3,7 @@
 ## Setup
 
 1. Clone the repository.
-2. Run `npm install`.
-3. Start Neovim with the plugin on `runtimepath`:
+2. Start Neovim with the plugin on `runtimepath`:
 
 ```bash
 NVIM_APPNAME=dottest-dev nvim -u NONE -i NONE \
@@ -15,7 +14,6 @@ NVIM_APPNAME=dottest-dev nvim -u NONE -i NONE \
 ## Development notes
 
 - The Neovim plugin code lives under `lua/dottest/`.
-- The Ink UI lives in `ink/cli.mjs`.
 - Workspace-local cache and suites are stored under `.dottest/` and should not be committed accidentally.
 
 ## Before opening a pull request
@@ -29,13 +27,7 @@ NVIM_APPNAME=dottest-dev nvim --headless -u NONE -i NONE \
   +q
 ```
 
-2. Run the Ink panel locally if your change affects the UI:
-
-```bash
-npm run panel -- --cwd /path/to/your/dotnet/workspace
-```
-
-3. Check that no machine-specific paths, credentials, logs, or local cache files were added to the diff.
+2. Check that no machine-specific paths, credentials, logs, or local cache files were added to the diff.
 
 ## Reporting security issues
 

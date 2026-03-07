@@ -90,8 +90,20 @@ local function trim_indent(line)
   return (line:gsub("^%s+", ""))
 end
 
+function M.test_filter_name(name)
+  if not name or name == "" then
+    return name
+  end
+  return (name:gsub("%b()", ""))
+end
+
 function M.list_tests(project)
-  local cmd = {
+  local result = vim.system(M.list_tests_command(project), { cwd = project.root, text = true }):wait()
+  return M.parse_list_tests_result(result)
+end
+
+function M.list_tests_command(project)
+  return {
     "dotnet",
     "test",
     project.path,
@@ -100,8 +112,9 @@ function M.list_tests(project)
     "--verbosity",
     "quiet",
   }
+end
 
-  local result = vim.system(cmd, { cwd = project.root, text = true }):wait()
+function M.parse_list_tests_result(result)
   if result.code ~= 0 then
     return nil, result.stderr ~= "" and result.stderr or result.stdout
   end
@@ -116,6 +129,7 @@ function M.list_tests(project)
         table.insert(tests, {
           kind = "test",
           name = name,
+          filter_name = M.test_filter_name(name),
           project = project,
         })
       end
@@ -123,6 +137,15 @@ function M.list_tests(project)
   end
 
   return tests
+end
+
+function M.list_tests_async(project, callback)
+  vim.system(M.list_tests_command(project), { cwd = project.root, text = true }, function(result)
+    local tests, err = M.parse_list_tests_result(result)
+    vim.schedule(function()
+      callback(tests, err)
+    end)
+  end)
 end
 
 local function nearest_match(patterns)
