@@ -158,10 +158,10 @@ function M.list_tests_async(project, callback, force)
 
   vim.system(M.list_tests_command(project), { cwd = project.root, text = true }, function(result)
     local tests, err = M.parse_list_tests_result(result)
-    if tests then
-      cache.write(project.path, tests)
-    end
     vim.schedule(function()
+      if tests then
+        cache.write(project.path, tests)
+      end
       callback(tests, err)
     end)
   end)
