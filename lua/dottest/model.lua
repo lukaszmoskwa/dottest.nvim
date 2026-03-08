@@ -40,8 +40,9 @@ local function visible_match(node, filter)
     node.project and node.project.name or "",
   }
 
+  local lower_filter = filter:lower()
   for _, value in ipairs(haystacks) do
-    if value:lower():find(filter, 1, true) then
+    if value:lower():find(lower_filter, 1, true) then
       return true
     end
   end
