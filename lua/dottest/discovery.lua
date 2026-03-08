@@ -139,9 +139,28 @@ function M.parse_list_tests_result(result)
   return tests
 end
 
-function M.list_tests_async(project, callback)
+-- force: when true, skips the cache and always runs dotnet test --list-tests.
+function M.list_tests_async(project, callback, force)
+  local cache = require("dottest.cache")
+
+  if not force then
+    local cached = cache.read(project.path)
+    if cached then
+      for _, t in ipairs(cached) do
+        t.project = project
+      end
+      vim.schedule(function()
+        callback(cached, nil)
+      end)
+      return
+    end
+  end
+
   vim.system(M.list_tests_command(project), { cwd = project.root, text = true }, function(result)
     local tests, err = M.parse_list_tests_result(result)
+    if tests then
+      cache.write(project.path, tests)
+    end
     vim.schedule(function()
       callback(tests, err)
     end)

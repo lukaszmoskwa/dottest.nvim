@@ -188,7 +188,7 @@ local function ensure_buffer()
     runner.run_workspace(explorer.workspace_source)
   end, opts)
   vim.keymap.set("n", "gr", function()
-    M.refresh()
+    M.refresh(true)
   end, opts)
   vim.keymap.set("n", "/", function()
     M.prompt_filter()
@@ -427,7 +427,7 @@ local function load_next_project()
 
     render()
     load_next_project()
-  end)
+  end, explorer.force_refresh)
 end
 
 local function queue_project_load(project_node)
@@ -503,8 +503,11 @@ function M.close()
   end
 end
 
-function M.refresh()
+-- force: when true, bypasses the test list cache and re-runs dotnet test --list-tests.
+-- gr keymap always passes force=true; opening the panel uses the cache.
+function M.refresh(force)
   local explorer = explorer_state()
+  explorer.force_refresh = force or false
   local discovered = discovery.find_test_projects()
   explorer.workspace_source = discovered
   explorer.workspace = model.make_workspace(discovered, explorer.expanded)
