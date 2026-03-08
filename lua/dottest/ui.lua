@@ -9,6 +9,17 @@ function M.open_discovery()
   explorer.open()
 end
 
+function M.open_for_file()
+  local file = vim.api.nvim_buf_get_name(0)
+  if file == "" or not file:match("%.cs$") then
+    vim.notify("[dottest.nvim] Current buffer is not a C# file", vim.log.levels.WARN)
+    return
+  end
+  -- In .NET the file name matches the class name, so use the stem as the filter.
+  local class_name = vim.fn.fnamemodify(file, ":t:r")
+  explorer.open_with_filter(class_name)
+end
+
 function M.toggle_panel()
   explorer.toggle()
 end

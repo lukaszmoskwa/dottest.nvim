@@ -7,6 +7,7 @@ local M = {}
 local function create_user_commands()
   pcall(vim.api.nvim_del_user_command, "DottestPanel")
   pcall(vim.api.nvim_del_user_command, "DottestPanelToggle")
+  pcall(vim.api.nvim_del_user_command, "DottestPanelFile")
 
   vim.api.nvim_create_user_command("DottestPanel", function()
     ui.open_discovery()
@@ -15,6 +16,10 @@ local function create_user_commands()
   vim.api.nvim_create_user_command("DottestPanelToggle", function()
     ui.toggle_panel()
   end, { desc = "Toggle the .NET test panel" })
+
+  vim.api.nvim_create_user_command("DottestPanelFile", function()
+    ui.open_for_file()
+  end, { desc = "Open the .NET test panel filtered to the current file" })
 end
 
 local function create_keymap()

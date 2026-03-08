@@ -481,6 +481,11 @@ function M.open()
   end
 end
 
+function M.open_with_filter(filter)
+  explorer_state().filter = filter or ""
+  M.open()
+end
+
 function M.toggle()
   local explorer = explorer_state()
   local current_buf = vim.api.nvim_get_current_buf()
