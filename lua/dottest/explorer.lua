@@ -498,7 +498,16 @@ function M.close()
   local explorer = explorer_state()
   M.close_output()
   if is_valid_win(explorer.winid) then
-    vim.api.nvim_win_close(explorer.winid, true)
+    if vim.fn.winnr("$") == 1 then
+      -- Can't close the last window; restore the previous buffer or open a new one.
+      if is_valid_buf(explorer.last_source_buf) then
+        vim.api.nvim_win_set_buf(explorer.winid, explorer.last_source_buf)
+      else
+        vim.cmd.enew()
+      end
+    else
+      vim.api.nvim_win_close(explorer.winid, true)
+    end
     explorer.winid = nil
   end
 end
