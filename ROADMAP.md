@@ -6,7 +6,7 @@
   Make `R` run selected nodes instead of all discovered tests, with clear precedence for project, scope, and test selections.
 - [ ] Suite creation and editing
   Add "save selection as suite", "append to suite", and "rename suite" flows from the panel or Neovim commands.
-- [ ] Failure integration with quickfix
+- [x] Failure integration with quickfix
   Populate quickfix or diagnostics from failed tests so users can navigate failures outside the Ink panel.
 - [ ] Configurable runner options
   Support user config for extra `dotnet test` args, env vars, configuration, framework, and settings file.
@@ -48,7 +48,7 @@
 
 - [x] Checked runs in the panel
 - [ ] Suite creation and editing
-- [ ] Failure integration with quickfix
+- [x] Failure integration with quickfix
 - [ ] Configurable runner options
 - [ ] Batch execution by project
 - [ ] Better nearest-test detection

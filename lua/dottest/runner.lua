@@ -42,20 +42,46 @@ local function parse_outcomes(output)
   return outcomes
 end
 
-local function populate_quickfix(target, outcomes)
-  local items = {}
-  for name, status in pairs(outcomes) do
-    if status == "failed" then
-      table.insert(items, {
-        text = string.format("%s :: %s", target.project.name, name),
-      })
+-- Returns {name, file, lnum}[] for each failed test, with file/line from the
+-- nearest stack frame below the failure header.
+local function parse_failures_with_locations(output)
+  local failures = {}
+  local lines = vim.split(output or "", "\n", { plain = true })
+  for i, line in ipairs(lines) do
+    local name = line:match("^%s*Failed%s+(.+)%s+%[[^%]]+%]%s*$")
+    if name then
+      name = normalize_test_name(name)
+      local file, lnum
+      for j = i + 1, math.min(i + 40, #lines) do
+        -- stop when we hit the next test result line
+        if lines[j]:match("^%s*[PF][a-z]+%s+.+%s+%[[^%]]+%]%s*$") then
+          break
+        end
+        local f, l = lines[j]:match("%s+in%s+(.+):line%s+(%d+)%s*$")
+        if f and l then
+          file = vim.fs.normalize(f)
+          lnum = tonumber(l)
+          break
+        end
+      end
+      table.insert(failures, { name = name, file = file, lnum = lnum })
     end
   end
+  return failures
+end
 
-  vim.fn.setqflist({}, "r", { title = "dottest failures", items = items })
-  if #items > 0 then
-    vim.cmd.copen()
+-- mode: "r" (replace) for single runs, "a" (append) for multi-project batches.
+local function populate_quickfix(target, failures, mode)
+  local items = {}
+  for _, f in ipairs(failures) do
+    local item = { text = string.format("%s :: %s", target.project.name, f.name) }
+    if f.file then
+      item.filename = f.file
+      item.lnum = f.lnum or 1
+    end
+    table.insert(items, item)
   end
+  vim.fn.setqflist({}, mode, { title = "dottest failures", items = items })
 end
 
 local function summarize_run(target, result)
@@ -64,27 +90,20 @@ local function summarize_run(target, result)
     result.stderr or "",
   }, "\n")
   local outcomes = parse_outcomes(output)
-  local failed = 0
-  for _, status in pairs(outcomes) do
-    if status == "failed" then
-      failed = failed + 1
-    end
-  end
-
-  if next(outcomes) ~= nil then
-    populate_quickfix(target, outcomes)
-  end
+  local failures = parse_failures_with_locations(output)
 
   return {
     ok = result.code == 0,
     output = output,
     outcomes = outcomes,
-    failed = failed,
+    failures = failures,
+    failed = #failures,
     code = result.code,
   }
 end
 
-local function run_one(target, callback)
+-- qf_mode: "r" replace (single run) or "a" append (batch run).
+local function run_one(target, callback, qf_mode)
   local explorer = require("dottest.explorer")
   local cmd = build_test_command(target)
   explorer.mark_running(target)
@@ -93,6 +112,10 @@ local function run_one(target, callback)
     vim.schedule(function()
       local summary = summarize_run(target, result)
       explorer.complete_run(target, summary)
+      populate_quickfix(target, summary.failures, qf_mode or "r")
+      if qf_mode ~= "a" and #summary.failures > 0 then
+        vim.cmd.copen()
+      end
       callback(summary)
     end)
   end)
@@ -100,10 +123,15 @@ end
 
 local function run_items(items, done)
   local index = 1
+  -- Reset the list before the first run so stale entries from previous runs are cleared.
+  vim.fn.setqflist({}, "r", { title = "dottest failures", items = {} })
 
   local function step()
     local item = items[index]
     if not item then
+      if #vim.fn.getqflist() > 0 then
+        vim.cmd.copen()
+      end
       if done then
         done()
       end
@@ -113,7 +141,7 @@ local function run_items(items, done)
     run_one(item, function()
       index = index + 1
       step()
-    end)
+    end, "a")
   end
 
   step()
@@ -125,8 +153,7 @@ function M.run_target(target)
     target = target,
   }
 
-  run_one(target, function()
-  end)
+  run_one(target, function() end, "r")
 end
 
 function M.run_workspace(workspace)
